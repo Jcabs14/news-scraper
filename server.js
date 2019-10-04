@@ -3,6 +3,11 @@ var express = require("express");
 var logger = require("morgan");
 var mongoose = require("mongoose");
 
+
+// Initialize Express
+var app = express();
+
+
 // Require axios and cheerio. This makes the scraping possible
 var axios = require("axios");
 var cheerio = require("cheerio");
@@ -11,16 +16,13 @@ var cheerio = require("cheerio");
 var exphbs = require("express-handlebars");
 
 app.engine('handlebars',exphbs({defaultLayout:'main'}));
+app.set("view engine", "handlebars");
 
 // Require all models
 var db = require("./models");
 
 //our port
 var PORT = 3000;
-
-
-// Initialize Express
-var app = express();
 
 // Configure middleware
 
