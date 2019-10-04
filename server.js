@@ -1,6 +1,7 @@
 // Dependencies
 var express = require("express");
-var mongojs = require("mongojs");
+var logger = require("morgan");
+var mongoose = require("mongoose");
 
 // Require axios and cheerio. This makes the scraping possible
 var axios = require("axios");
@@ -9,78 +10,81 @@ var cheerio = require("cheerio");
 //require handlebars
 var exphbs = require("express-handlebars");
 
+app.engine('handlebars',exphbs({defaultLayout:'main'}));
+
+// Require all models
+var db = require("./models");
+
+//our port
+var PORT = 3000;
+
+
 // Initialize Express
 var app = express();
 
-// Database configuration
-var databaseUrl = "scraper";
-var collections = ["scrapedData"];
+// Configure middleware
 
-// Hook mongojs configuration to the db variable
-var db = mongojs(databaseUrl, collections);
-db.on("error", function(error) {
-  console.log("Database Error:", error);
-});
+// Use morgan logger for logging requests
+app.use(logger("dev"));
+// Parse request body as JSON
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+// Make public a static folder
+app.use(express.static("public"));
+
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
+
+// Connect to the Mongo DB
+mongoose.connect(MONGODB_URI);
 
 // Main route (simple Hello World Message)
-app.get("/", function(req, res) {
-  res.render("index");
+app.get("/", function (req, res) {
+    res.render("index");
 });
 
 // Retrieve data from the db
-app.get("/all", function(req, res) {
-  // Find all results from the scrapedData collection in the db
-  db.scrapedData.find({}, function(error, found) {
-    // Throw any errors to the console
-    if (error) {
-      console.log(error);
-    }
-    // If there are no errors, send the data to the browser as json
-    else {
-      res.json(found);
-    }
-  });
+app.get("/all", function (req, res) {
+    // Find all results from the scrapedData collection in the db
+    db.scrapedData.find({}, function (error, found) {
+        // Throw any errors to the console
+        if (error) {
+            console.log(error);
+        }
+        // If there are no errors, send the data to the browser as json
+        else {
+            res.json(found);
+        }
+    });
 });
 
 // Scrape data from one site and place it into the mongodb db
-app.get("/scrape", function(req, res) {
-  // Make a request via axios for the news section of `ycombinator`
-  axios.get("https://www.nytimes.com").then(function(response) {
-    // Load the html body from axios into cheerio
-    var $ = cheerio.load(response.data);
-    // For each element with a "title" class
-    $(".title").each(function(i, element) {
-      // Save the text and href of each link enclosed in the current element
-      var title = $(element).children("a").text();
-      var link = $(element).children("a").attr("href");
+app.get("/scrape", function (req, res) {
 
-      // If this found element had both a title and a link
-      if (title && link) {
-        // Insert the data in the scrapedData db
-        db.scrapedData.insert({
-          title: title,
-          link: link
-        },
-        function(err, inserted) {
-          if (err) {
-            // Log the error if one is encountered during the query
-            console.log(err);
-          }
-          else {
-            // Otherwise, log the inserted data
-            console.log(inserted);
-          }
+    //make request to new york times
+    axios.get("https://www.nytimes.com").then(function (response) {
+        // Load the html body from axios into cheerio
+        var $ = cheerio.load(response.data);
+        // For each element with a "title" class
+        $("article").each(function (i, element) {
+
+            // Save an empty result object
+            var result = {};
+            // Save the text and href of each link enclosed in the current element
+            result.title = $(this).find("h2").text();
+            result.summary = $(this).find("li").text();
+            result.link = $(this).find("a").attr("href");
+
+            //create the article
+            var article = new Article
         });
-      }
     });
-  });
 
-  // Send a "Scrape Complete" message to the browser
-  res.send("Scrape Complete");
+    // Send a "Scrape Complete" message to the browser
+    res.send("Scrape Complete");
 });
 
 
 // Listen on port 3000
-app.listen(3000, function() {
-  console.log("App running on port 3000!");
+app.listen(PORT, function () {
+    console.log("App running on port: " + PORT);
 });
