@@ -14,7 +14,6 @@ var ArticleSchema = new Schema({
   //summary of the article or body
   summary:{
       type: String,
-      required: true
   },
   // link of the article
   link: {
