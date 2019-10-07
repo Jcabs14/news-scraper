@@ -1,0 +1,23 @@
+<div class="container">
+    <div class="col-md-12 jumbotron">
+        <div class="text-center">
+            <h1>Your saved articles</h1>
+            <button type="button" class="btn btn-primary" id="scrape">Scrape Articles</button>
+        </div>
+    </div>
+    <div class="col-md-12" id="articles">
+        {{#each article}}
+        <div class="card">
+            <div>
+                <h4 class="card-header">{{this.title}}</h4>
+            </div>
+            <div>
+                <p class='card-body'> {{this.summary}}</p>
+                <a href={{this.link}} target="_blank">{{this.link}}</a>
+                <br><br>
+                <button type="button" class="btn btn-success save" data-id={{this._id}}>Save Article</button>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>

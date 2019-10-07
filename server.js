@@ -60,8 +60,8 @@ app.get("/scrape", function (req, res) {
             var result = {};
             // Save the text and href of each link enclosed in the current element
             result.title = $(this).find("h2").text();
-            result.summary = $(this).find("li").text();
-            result.link = $(this).find("a").attr("href");
+            result.summary = $(this).find("p").text();
+            result.link = "https://www.nytimes.com" + $(this).find("a").attr("href");
 
             //create the article
             // Create a new Article using the `result` object built from scraping
